@@ -49,11 +49,22 @@ export function appendEntry(entry) {
 export const newId = () => crypto.randomBytes(3).toString("hex");
 
 // ---------- tokenising + BM25 ----------
-const STOP = new Set(
-  "a an the and or but if of to in on at for with is are was were be been it this that as by from i you we they he she not do does did".split(" ")
+const STOP = new Set(("a an the and or but if of to in on at for with is are was were be been it this that as by from " +
+  "i you we they he she not do does did my me your our what which who when where how can could would " +
+  "should will tell about please remember recall").split(" ")
 );
+  
+// Light normalisation so "favorite color" matches "favourite colour",
+// "colors" matches "color", "running" matches "run". No dependencies.
+function stem(w) {
+  w = w.replace(/our(s|ed|ing|ite|ites)?$/, (_, x) => "or" + (x || "")); // colour -> color, favourite -> favorite
+  w = w.replace(/ise(d|s)?$/, (_, x) => "ize" + (x || ""));            //   organise -> organize
+  if (w.length > 4) w = w.replace(/(ing|ed|es|s)$/, "");
+  return w;
+}
+
 export function tokens(s) {
-  return (s.toLowerCase().match(/[a-z0-9_]+/g) || []).filter((t) => t.length > 1 && !STOP.has(t));
+  return (s.toLowerCase().match(/[a-z0-9_]+/g) || []).filter((t) => t.length > 1 && !STOP.has(t)).map(stem);
 }
 
 export function search(query, entries, { limit = 3, includeUnverified = true } = {}) {

@@ -31,8 +31,13 @@ server.registerTool(
   "recall",
   { description: "Search saved memory by keywords.", inputSchema: { query: z.string() } },
   async ({ query }) => {
-    const hits = search(query, readAll(), { limit: 3 });
-    return text(hits.length ? hits.map((e) => `- ${e.status === "verified" ? "" : "(?) "}${e.text}`).join("\n") : "nothing found");
+    const all = readAll();
+    const line = (e) => `- ${e.status === "verified" ? "" : "(?) "}${e.text}`;
+    const hits = search(query, all, { limit: 3 });
+    if (hits.length) return text(hits.map(line).join("\n"));
+    // No keyword match: show the newest entries so the model can judge, instead of giving up.
+    const recent = all.filter((e) => e.status !== "rejected").sort((a, b) => b.ts - a.ts).slice(0, 3);
+    return text(recent.length ? "no exact match. recent entries:\n" + recent.map(line).join("\n") : "memory is empty");
   }
 );
 

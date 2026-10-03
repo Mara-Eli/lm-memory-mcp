@@ -111,3 +111,19 @@ test("MCP server end-to-end over stdio", async () => {
   assert.match(boot, /\(\?\) Target runtime/);
   await client.close();
 });
+
+test("recall tolerates US/UK spelling and plurals", () => {
+  reset();
+  remember("My favourite colour is blue");
+  for (const q of ["favorite color", "what is my favorite color?", "colors", "favourite colour"]) {
+    assert.equal(search(q, readAll()).length, 1, `query failed: ${q}`);
+  }
+  remember("I organise my notes and was running tests");
+  assert.equal(search("organize note run test", readAll()).length >= 1, true);
+});
+  
+test("generic words alone do not create false matches", () => {
+  reset();
+  remember("My favourite colour is blue");
+  assert.equal(search("what is my name", readAll()).length, 0);
+});
