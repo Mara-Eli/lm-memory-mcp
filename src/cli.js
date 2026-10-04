@@ -3,6 +3,8 @@
 import { readAll, compact, search, memoryDir, readState } from "./store.js";
 import { setStatus, remember } from "./log.js";
 import { buildBoot } from "./boot.js";
+import fs from "node:fs";
+import { conversationsDirs, listConversationFiles, buildIndex, searchChats, formatHits, shapeOf } from "./history.js";
 
 const [cmd, ...args] = process.argv.slice(2);
 const fmt = (e) => `${e.id}  [${e.status.padEnd(10)}] ${e.text}${e.tags?.length ? "  #" + e.tags.join(" #") : ""}`;
@@ -29,6 +31,23 @@ switch (cmd) {
     console.log({ dir: memoryDir(), total: all.length, verified: by("verified"), unverified: by("unverified"), rejected: by("rejected"), stateKeys: Object.keys(readState()).length });
     break;
   }
+  case "chats": {
+    console.log("folders:", conversationsDirs().join(", ") || "(none found, set LMSTUDIO_CONVERSATIONS)");
+    const { idx } = buildIndex();
+    const rows = Object.entries(idx.files).sort((a, b) => b[1].mtimeMs - a[1].mtimeMs);
+    console.log(rows.map(([f, x]) => `${new Date(x.mtimeMs).toISOString().slice(0, 16)}  ${String(x.chunks.length).padStart(3)} exch  ${x.failed ? "(unreadable) " : ""}${x.title}`).join("\n") || "(no conversations)");
+    break;
+  }
+  case "reindex": console.log(buildIndex({ force: true }).stats); break;
+  case "chat-search": console.log(formatHits(searchChats(args.join(" "), { limit: 5, excludeRecentMinutes: 0 }))); break;
+  case "inspect": {
+    // Prints the key structure of a conversation file, with no message text.
+    const file = args[0] || listConversationFiles()[0];
+    if (!file) { console.log("no conversation files found"); break; }
+    console.log(file);
+    console.log(JSON.stringify(shapeOf(JSON.parse(fs.readFileSync(file, "utf8"))), null, 1));
+    break;
+  }
   default:
-    console.log("commands: list [status] | approve <id..> | reject <id..> | add <text> | search <q> | boot | compact | stats");
+    console.log("commands: chats | reindex | chat-search <q> | inspect [file] | list [status] | approve <id..> | reject <id..> | add <text> | search <q> | boot | compact | stats");
 }

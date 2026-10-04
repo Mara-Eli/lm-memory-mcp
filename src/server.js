@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// One MCP server, four tiny tools. Descriptions are deliberately short:
+// One MCP server, five tiny tools. Descriptions are deliberately short:
 // every word here is re-processed by the model on every turn.
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
@@ -8,6 +8,7 @@ import { readAll, search } from "./store.js";
 import { remember } from "./log.js";
 import { stateSet } from "./state.js";
 import { buildBoot } from "./boot.js";
+import { searchChats, formatHits } from "./history.js";
 
 const server = new McpServer({ name: "memory", version: "0.1.0" });
 const text = (t) => ({ content: [{ type: "text", text: t }] });
@@ -38,6 +39,19 @@ server.registerTool(
     // No keyword match: show the newest entries so the model can judge, instead of giving up.
     const recent = all.filter((e) => e.status !== "rejected").sort((a, b) => b.ts - a.ts).slice(0, 3);
     return text(recent.length ? "no exact match. recent entries:\n" + recent.map(line).join("\n") : "memory is empty");
+  }
+);
+
+server.registerTool(
+  "search_chats",
+  { description: "Search past chat history by keywords.", inputSchema: { query: z.string() } },
+  async ({ query }) => {
+    try {
+      return text(formatHits(searchChats(query, { limit: 3 })));
+    }
+    catch {
+      return text("chat history unavailable"); // never crash the server over LM Studio's files
+    }
   }
 );
 
