@@ -98,7 +98,7 @@ test("MCP server end-to-end over stdio", async () => {
   const client = new Client({ name: "t", version: "0" });
   await client.connect(new StdioClientTransport({ command: "node", args: [server], env: { ...process.env, MEMORY_DIR: tmp } }));
   const tools = (await client.listTools()).tools;
-  assert.deepEqual(tools.map((t) => t.name).sort(), ["memory_boot", "recall", "remember", "state_set"]);
+  assert.deepEqual(tools.map((t) => t.name).sort(), ["memory_boot", "recall", "remember", "search_chats", "state_set"]);
   const schemaChars = JSON.stringify(tools).length;
   console.log(`  tool schema size: ${schemaChars} chars (~${Math.ceil(schemaChars / 4)} tokens)`);
   const call = async (name, args = {}) => (await client.callTool({ name, arguments: args })).content[0].text;

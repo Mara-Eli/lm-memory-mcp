@@ -1,1 +1,3 @@
 {"id":"3bb2d6","ts":1791034296757,"text":"My favourite colour is blue","tags":[],"status":"unverified"}
+{"id":"137410","ts":1791040791703,"text":"Project preference: Iterative approach focusing on small, focused MVPs. Requires regular team check-ins and utilizes Python, JavaScript (JS), TypeScript (TS), and JSON.","tags":["project_preferences","development"],"status":"unverified"}
+{"id":"de6628","ts":1791041502284,"text":"When asked to build or design a complex system, always adopt the Unix philosophy: modularity is key. Every component (tool, module, function) must have a single, clearly defined purpose and communicate via standardized inputs/outputs (like pipes).","tags":["design_preference","architecture","system","design"],"status":"unverified"}
